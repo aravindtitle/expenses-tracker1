@@ -29,11 +29,48 @@
       <!-- Appointments will be listed here -->
     </ul>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const appointmentForm = document.getElementById("appointmentForm");
         const appointmentList = document.getElementById("appointmentList");
+        const apiURL =
+          "https://crudcrud.com/api/a435aebd6eca40df855e18fa635a14b7/appointments";
+
+        // Function to fetch appointments and display them
+        const fetchAppointments = async () => {
+          try {
+            const response = await axios.get(apiURL);
+            const appointments = response.data;
+
+            // Clear existing list before updating
+            appointmentList.innerHTML = "";
+
+            appointments.forEach((appointment) => {
+              const listItem = document.createElement("li");
+              listItem.textContent = `Name: ${appointment.name}, Email: ${appointment.email}, Mobile: ${appointment.mobile}`;
+
+              // Create delete button
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.addEventListener("click", async () => {
+                try {
+                  await axios.delete(`${apiURL}/${appointment._id}`);
+                  listItem.remove(); // Remove the appointment from the list
+                } catch (error) {
+                  console.error("Error deleting appointment:", error);
+                }
+              });
+
+              listItem.appendChild(deleteButton);
+              appointmentList.appendChild(listItem);
+            });
+          } catch (error) {
+            console.error("Error fetching appointments:", error);
+          }
+        };
+
+        fetchAppointments(); // Fetch and display appointments initially
 
         appointmentForm.addEventListener("submit", async (event) => {
           event.preventDefault();
@@ -43,7 +80,6 @@
           const email = document.getElementById("email").value;
           const mobile = document.getElementById("mobile").value;
 
-          // Create a new appointment object
           const newAppointment = {
             name,
             email,
@@ -51,43 +87,26 @@
           };
 
           try {
-            // Simulate sending the appointment to the server (replace with actual API call)
-            const response = await axios.post(
-              "/api/appointments",
-              newAppointment
-            );
-            const createdAppointment = response.data; // Assuming the server responds with the created appointment
+            const response = await axios.post(apiURL, newAppointment);
+            const createdAppointment = response.data;
 
-            // Add the new appointment to the list
             const listItem = document.createElement("li");
             listItem.textContent = `Name: ${createdAppointment.name}, Email: ${createdAppointment.email}, Mobile: ${createdAppointment.mobile}`;
 
-            // Create delete and edit buttons
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "Delete";
             deleteButton.addEventListener("click", async () => {
-              // Simulate deleting the appointment (replace with actual API call)
-              // You'll need to implement the logic to delete the appointment on the server
-              listItem.remove(); // Remove the appointment from the list
+              try {
+                await axios.delete(`${apiURL}/${createdAppointment._id}`);
+                listItem.remove(); // Remove the appointment from the list
+              } catch (error) {
+                console.error("Error deleting appointment:", error);
+              }
             });
 
-            const editButton = document.createElement("button");
-            editButton.textContent = "Edit";
-            editButton.addEventListener("click", () => {
-              // Implement logic to edit appointment
-              // This might involve populating the form fields with appointment data for editing
-              // You'll need to define how editing should work
-              console.log("Edit button clicked");
-            });
-
-            // Append buttons to the list item
             listItem.appendChild(deleteButton);
-            listItem.appendChild(editButton);
-
-            // Add the new appointment item to the list
             appointmentList.appendChild(listItem);
 
-            // Clear the form after adding the appointment
             appointmentForm.reset();
           } catch (error) {
             console.error("Error adding appointment:", error);
